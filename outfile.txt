@@ -1,0 +1,287 @@
+ Volume in drive C is OS
+ Volume Serial Number is F06F-E751
+
+ Directory of C:\Users\Abhijit\ExcelCompareTool\excel-compare
+
+05/06/2026  06:28 PM    <DIR>          .
+05/06/2026  03:31 PM    <DIR>          ..
+05/06/2026  03:03 PM               846 .gitignore
+05/06/2026  03:03 PM             1,104 LICENSE
+05/06/2026  06:28 PM                 0 outfile.txt
+05/06/2026  03:08 PM             1,274 pyproject.toml
+05/06/2026  03:03 PM             2,514 README.md
+05/06/2026  03:03 PM    <DIR>          src
+               5 File(s)          5,738 bytes
+
+ Directory of C:\Users\Abhijit\ExcelCompareTool\excel-compare\.git
+
+05/06/2026  06:28 PM    <DIR>          ..
+05/06/2026  04:24 PM                15 COMMIT_EDITMSG
+05/06/2026  04:34 PM               303 config
+05/06/2026  04:23 PM                73 description
+05/06/2026  04:34 PM                21 HEAD
+05/06/2026  04:23 PM    <DIR>          hooks
+05/06/2026  04:24 PM               803 index
+05/06/2026  04:23 PM    <DIR>          info
+05/06/2026  04:24 PM    <DIR>          logs
+05/06/2026  04:24 PM    <DIR>          objects
+05/06/2026  04:26 PM    <DIR>          refs
+               5 File(s)          1,215 bytes
+
+ Directory of C:\Users\Abhijit\ExcelCompareTool\excel-compare\.git\hooks
+
+05/06/2026  04:23 PM    <DIR>          .
+05/06/2026  04:23 PM               478 applypatch-msg.sample
+05/06/2026  04:23 PM               896 commit-msg.sample
+05/06/2026  04:23 PM             4,726 fsmonitor-watchman.sample
+05/06/2026  04:23 PM               189 post-update.sample
+05/06/2026  04:23 PM               424 pre-applypatch.sample
+05/06/2026  04:23 PM             1,649 pre-commit.sample
+05/06/2026  04:23 PM               416 pre-merge-commit.sample
+05/06/2026  04:23 PM             1,374 pre-push.sample
+05/06/2026  04:23 PM             4,898 pre-rebase.sample
+05/06/2026  04:23 PM               544 pre-receive.sample
+05/06/2026  04:23 PM             1,492 prepare-commit-msg.sample
+05/06/2026  04:23 PM             2,783 push-to-checkout.sample
+05/06/2026  04:23 PM             2,308 sendemail-validate.sample
+05/06/2026  04:23 PM             3,650 update.sample
+              14 File(s)         25,827 bytes
+
+ Directory of C:\Users\Abhijit\ExcelCompareTool\excel-compare\.git\info
+
+05/06/2026  04:23 PM    <DIR>          .
+05/06/2026  04:23 PM               240 exclude
+               1 File(s)            240 bytes
+
+ Directory of C:\Users\Abhijit\ExcelCompareTool\excel-compare\.git\logs
+
+05/06/2026  04:24 PM    <DIR>          .
+05/06/2026  04:34 PM               562 HEAD
+05/06/2026  04:34 PM    <DIR>          refs
+               1 File(s)            562 bytes
+
+ Directory of C:\Users\Abhijit\ExcelCompareTool\excel-compare\.git\logs\refs
+
+05/06/2026  04:34 PM    <DIR>          .
+05/06/2026  04:24 PM    <DIR>          ..
+05/06/2026  04:34 PM    <DIR>          heads
+05/06/2026  04:26 PM    <DIR>          remotes
+               0 File(s)              0 bytes
+
+ Directory of C:\Users\Abhijit\ExcelCompareTool\excel-compare\.git\logs\refs\heads
+
+05/06/2026  04:34 PM    <DIR>          .
+05/06/2026  04:34 PM    <DIR>          ..
+05/06/2026  04:34 PM               368 main
+               1 File(s)            368 bytes
+
+ Directory of C:\Users\Abhijit\ExcelCompareTool\excel-compare\.git\logs\refs\remotes
+
+05/06/2026  04:26 PM    <DIR>          .
+05/06/2026  04:34 PM    <DIR>          ..
+05/06/2026  04:34 PM    <DIR>          origin
+               0 File(s)              0 bytes
+
+ Directory of C:\Users\Abhijit\ExcelCompareTool\excel-compare\.git\logs\refs\remotes\origin
+
+05/06/2026  04:34 PM    <DIR>          .
+05/06/2026  04:26 PM    <DIR>          ..
+05/06/2026  04:34 PM               156 main
+05/06/2026  04:26 PM               156 master
+               2 File(s)            312 bytes
+
+ Directory of C:\Users\Abhijit\ExcelCompareTool\excel-compare\.git\objects
+
+05/06/2026  04:24 PM    <DIR>          .
+05/06/2026  04:24 PM    <DIR>          06
+05/06/2026  04:24 PM    <DIR>          07
+05/06/2026  04:24 PM    <DIR>          0d
+05/06/2026  04:24 PM    <DIR>          10
+05/06/2026  04:24 PM    <DIR>          1e
+05/06/2026  04:24 PM    <DIR>          23
+05/06/2026  04:24 PM    <DIR>          24
+05/06/2026  04:24 PM    <DIR>          2e
+05/06/2026  04:24 PM    <DIR>          9e
+05/06/2026  04:24 PM    <DIR>          ed
+05/06/2026  04:24 PM    <DIR>          f1
+05/06/2026  04:24 PM    <DIR>          fe
+05/06/2026  04:23 PM    <DIR>          info
+05/06/2026  04:23 PM    <DIR>          pack
+               0 File(s)              0 bytes
+
+ Directory of C:\Users\Abhijit\ExcelCompareTool\excel-compare\.git\objects\06
+
+05/06/2026  04:24 PM    <DIR>          .
+05/06/2026  04:24 PM    <DIR>          ..
+05/06/2026  04:24 PM               625 b55867fdca2a557a8689c2ea9491c722073291
+               1 File(s)            625 bytes
+
+ Directory of C:\Users\Abhijit\ExcelCompareTool\excel-compare\.git\objects\07
+
+05/06/2026  04:24 PM    <DIR>          .
+05/06/2026  04:24 PM    <DIR>          ..
+05/06/2026  04:24 PM               133 7d9c40712f140614fa991d7c33af8b79cf0de1
+               1 File(s)            133 bytes
+
+ Directory of C:\Users\Abhijit\ExcelCompareTool\excel-compare\.git\objects\0d
+
+05/06/2026  04:24 PM    <DIR>          .
+05/06/2026  04:24 PM    <DIR>          ..
+05/06/2026  04:24 PM               664 1c6c0a9a58c386aad578fd4103995b11e7f49c
+               1 File(s)            664 bytes
+
+ Directory of C:\Users\Abhijit\ExcelCompareTool\excel-compare\.git\objects\10
+
+05/06/2026  04:24 PM    <DIR>          .
+05/06/2026  04:24 PM    <DIR>          ..
+05/06/2026  04:24 PM                55 2d55fbd3997f1bded3b45e9d8e354940a79089
+               1 File(s)             55 bytes
+
+ Directory of C:\Users\Abhijit\ExcelCompareTool\excel-compare\.git\objects\1e
+
+05/06/2026  04:24 PM    <DIR>          .
+05/06/2026  04:24 PM    <DIR>          ..
+05/06/2026  04:24 PM               145 6c723dbca39f32231ba6c7f04e3559fd56d4f5
+               1 File(s)            145 bytes
+
+ Directory of C:\Users\Abhijit\ExcelCompareTool\excel-compare\.git\objects\23
+
+05/06/2026  04:24 PM    <DIR>          .
+05/06/2026  04:24 PM    <DIR>          ..
+05/06/2026  04:24 PM               835 76f09be2191567629d0453bcb4d57adbd27727
+               1 File(s)            835 bytes
+
+ Directory of C:\Users\Abhijit\ExcelCompareTool\excel-compare\.git\objects\24
+
+05/06/2026  04:24 PM    <DIR>          .
+05/06/2026  04:24 PM    <DIR>          ..
+05/06/2026  04:24 PM               488 e604884a779a046ccad6e0cf33c1312615e65e
+               1 File(s)            488 bytes
+
+ Directory of C:\Users\Abhijit\ExcelCompareTool\excel-compare\.git\objects\2e
+
+05/06/2026  04:24 PM    <DIR>          .
+05/06/2026  04:24 PM    <DIR>          ..
+05/06/2026  04:24 PM             1,285 21a3cbf5630ae4f0de24eccb49289cd3bd4dd7
+               1 File(s)          1,285 bytes
+
+ Directory of C:\Users\Abhijit\ExcelCompareTool\excel-compare\.git\objects\9e
+
+05/06/2026  04:24 PM    <DIR>          .
+05/06/2026  04:24 PM    <DIR>          ..
+05/06/2026  04:24 PM               188 3b5f49def749c8dbe22441bd2e24fc6bc189ae
+               1 File(s)            188 bytes
+
+ Directory of C:\Users\Abhijit\ExcelCompareTool\excel-compare\.git\objects\ed
+
+05/06/2026  04:24 PM    <DIR>          .
+05/06/2026  04:24 PM    <DIR>          ..
+05/06/2026  04:24 PM             1,154 55907e983326e107287f17907ca70b97609f22
+               1 File(s)          1,154 bytes
+
+ Directory of C:\Users\Abhijit\ExcelCompareTool\excel-compare\.git\objects\f1
+
+05/06/2026  04:24 PM    <DIR>          .
+05/06/2026  04:24 PM    <DIR>          ..
+05/06/2026  04:24 PM               289 11f36032e20ad927f7882f73c0f3d5cd0ecd33
+               1 File(s)            289 bytes
+
+ Directory of C:\Users\Abhijit\ExcelCompareTool\excel-compare\.git\objects\fe
+
+05/06/2026  04:24 PM    <DIR>          .
+05/06/2026  04:24 PM    <DIR>          ..
+05/06/2026  04:24 PM               212 3a93b575562a9e7908c406c3718eba0026b6f7
+               1 File(s)            212 bytes
+
+ Directory of C:\Users\Abhijit\ExcelCompareTool\excel-compare\.git\objects\info
+
+05/06/2026  04:23 PM    <DIR>          .
+05/06/2026  04:24 PM    <DIR>          ..
+               0 File(s)              0 bytes
+
+ Directory of C:\Users\Abhijit\ExcelCompareTool\excel-compare\.git\objects\pack
+
+05/06/2026  04:23 PM    <DIR>          .
+05/06/2026  04:24 PM    <DIR>          ..
+               0 File(s)              0 bytes
+
+ Directory of C:\Users\Abhijit\ExcelCompareTool\excel-compare\.git\refs
+
+05/06/2026  04:26 PM    <DIR>          .
+05/06/2026  04:34 PM    <DIR>          heads
+05/06/2026  04:26 PM    <DIR>          remotes
+05/06/2026  04:23 PM    <DIR>          tags
+               0 File(s)              0 bytes
+
+ Directory of C:\Users\Abhijit\ExcelCompareTool\excel-compare\.git\refs\heads
+
+05/06/2026  04:34 PM    <DIR>          .
+05/06/2026  04:26 PM    <DIR>          ..
+05/06/2026  04:34 PM                41 main
+               1 File(s)             41 bytes
+
+ Directory of C:\Users\Abhijit\ExcelCompareTool\excel-compare\.git\refs\remotes
+
+05/06/2026  04:26 PM    <DIR>          .
+05/06/2026  04:26 PM    <DIR>          ..
+05/06/2026  04:34 PM    <DIR>          origin
+               0 File(s)              0 bytes
+
+ Directory of C:\Users\Abhijit\ExcelCompareTool\excel-compare\.git\refs\remotes\origin
+
+05/06/2026  04:34 PM    <DIR>          .
+05/06/2026  04:26 PM    <DIR>          ..
+05/06/2026  04:34 PM                41 main
+05/06/2026  04:26 PM                41 master
+               2 File(s)             82 bytes
+
+ Directory of C:\Users\Abhijit\ExcelCompareTool\excel-compare\.git\refs\tags
+
+05/06/2026  04:23 PM    <DIR>          .
+05/06/2026  04:26 PM    <DIR>          ..
+               0 File(s)              0 bytes
+
+ Directory of C:\Users\Abhijit\ExcelCompareTool\excel-compare\src
+
+05/06/2026  03:03 PM    <DIR>          .
+05/06/2026  06:28 PM    <DIR>          ..
+05/06/2026  03:03 PM    <DIR>          compareexcel.egg-info
+05/06/2026  03:03 PM    <DIR>          excel_compare
+               0 File(s)              0 bytes
+
+ Directory of C:\Users\Abhijit\ExcelCompareTool\excel-compare\src\compareexcel.egg-info
+
+05/06/2026  03:03 PM    <DIR>          .
+05/06/2026  03:03 PM    <DIR>          ..
+05/06/2026  03:03 PM                 1 dependency_links.txt
+05/06/2026  03:03 PM                56 entry_points.txt
+05/06/2026  03:03 PM             3,472 PKG-INFO
+05/06/2026  03:03 PM                26 requires.txt
+05/06/2026  03:03 PM               383 SOURCES.txt
+05/06/2026  03:03 PM                14 top_level.txt
+               6 File(s)          3,952 bytes
+
+ Directory of C:\Users\Abhijit\ExcelCompareTool\excel-compare\src\excel_compare
+
+05/06/2026  03:03 PM    <DIR>          .
+05/06/2026  03:03 PM    <DIR>          ..
+05/06/2026  03:02 PM             2,316 cli.py
+05/06/2026  03:02 PM             3,890 core.py
+05/06/2026  03:02 PM               644 report.py
+05/06/2026  03:02 PM               471 __init__.py
+05/06/2026  03:03 PM    <DIR>          __pycache__
+               4 File(s)          7,321 bytes
+
+ Directory of C:\Users\Abhijit\ExcelCompareTool\excel-compare\src\excel_compare\__pycache__
+
+05/06/2026  03:03 PM    <DIR>          .
+05/06/2026  03:03 PM    <DIR>          ..
+05/06/2026  03:03 PM             3,322 cli.cpython-313.pyc
+05/06/2026  03:03 PM             6,328 core.cpython-313.pyc
+05/06/2026  03:03 PM             1,119 report.cpython-313.pyc
+05/06/2026  03:03 PM               570 __init__.cpython-313.pyc
+               4 File(s)         11,339 bytes
+
+     Total Files Listed:
+              58 File(s)         63,070 bytes
+              91 Dir(s)  1,370,990,108,672 bytes free
