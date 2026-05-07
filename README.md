@@ -48,7 +48,7 @@ A short summary is always printed to the console; use `--output` to persist deta
 
 ```python
 from openpyxl import load_workbook
-from excel_compare import (
+from compareexcel import (
     compare_formatting,
     compare_data_alignment,
     compare_header_alignment,
