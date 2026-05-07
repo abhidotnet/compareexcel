@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "compareexcel"
-version = "0.2.1"
+version = "0.2.2"
 description = "Compare two Excel workbooks for column number formats and cell alignment differences, with optional Excel report output."
 readme = "README.md"
 license = "MIT"
