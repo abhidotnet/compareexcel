@@ -4,10 +4,10 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "compareexcel"
-version = "0.2.0"
+version = "0.2.1"
 description = "Compare two Excel workbooks for column number formats and cell alignment differences, with optional Excel report output."
 readme = "README.md"
-license = { text = "MIT" }
+license = "MIT"
 requires-python = ">=3.10"
 authors = [{ name = "Excel Compare contributors" }]
 keywords = ["excel", "xlsx", "compare", "openpyxl", "pandas"]
@@ -36,7 +36,4 @@ compareexcel = "compareexcel.cli:main"
 compareExcel = "compareexcel.cli:main"
 
 [tool.setuptools]
-package-dir = {"" = "src"}
-
-[tool.setuptools.packages.find]
-where = ["src"]
+packages = { find = { where = ["src"] } }

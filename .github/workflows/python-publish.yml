@@ -1,27 +1,48 @@
 name: Publish to PyPI
+
 on:
   release:
     types: [published]
+  workflow_dispatch: # Allows manual testing from the Actions tab
+
 permissions:
-  id-token: write
+  id-token: write  # Required for Trusted Publishing (OIDC)
   contents: read
+
 jobs:
   build-and-publish:
     runs-on: ubuntu-latest
     steps:
       - name: Check out repository
         uses: actions/checkout@v4
+
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
           python-version: "3.12"
+
       - name: Install build tools
         run: pip install build twine
-      - name: Remove stale egg-info
-        run: rm -rf src/*.egg-info
+
+      - name: Clean environment
+        # Removes any local artifacts that might have been accidentally committed
+        run: |
+          rm -rf dist/
+          rm -rf build/
+          rm -rf src/*.egg-info
+
       - name: Build package
+        # Generates the .tar.gz and .whl files into the /dist folder
         run: python -m build
+
       - name: Verify wheel metadata
+        # This will catch the "Missing Name/Version" error before attempting upload
         run: twine check dist/*
+
       - name: Publish to PyPI
+        # Uses the latest stable version of the publish action
         uses: pypa/gh-action-pypi-publish@v1.12.4
+        with:
+          # The action automatically finds files in dist/
+          # No password needed if Trusted Publishing is configured on PyPI
+          print-hash: true
