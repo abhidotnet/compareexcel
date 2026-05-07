@@ -2,7 +2,7 @@
 
 **compareExcel** is a small command-line tool and Python library that compares two Excel (`.xlsx`) workbooks. It reports differences in **column number formats**, **data cell alignment** (sampled from non-empty cells), and **header row alignment** for columns that exist in both files.
 
-Installable package name on PyPI is normalized as `compareexcel`; the installed console script is **`compareExcel`**.
+Install from PyPI with `pip install compareexcel`. The distribution and import package name is **`compareexcel`**. Installed console scripts are **`compareexcel`** and **`compareExcel`** (same entry point).
 
 ## Requirements
 
@@ -11,7 +11,7 @@ Installable package name on PyPI is normalized as `compareexcel`; the installed 
 
 ## Installation
 
-From the repository root (`excel-compare/`):
+From the repository root (`compareexcel/`):
 
 ```bash
 pip install .
@@ -68,9 +68,9 @@ write_report("out.xlsx", fmt, data_align, header_align)
 ## Package layout
 
 ```text
-excel-compare/
+compareexcel/
 ├── src/
-│   └── excel_compare/
+│   └── compareexcel/
 │       ├── __init__.py   # Public API and version
 │       ├── cli.py        # Entry point and argument parsing
 │       ├── core.py       # Comparison logic
