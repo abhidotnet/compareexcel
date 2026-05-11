@@ -18,6 +18,7 @@ _HTML_NO_DATA_COLOR = "#006100"
 
 _HEADER_ALIGN_COLS = frozenset({"File1_Header_Alignment", "File2_Header_Alignment"})
 _DATA_ALIGN_COLS = frozenset({"File1_Alignment", "File2_Alignment"})
+_COLUMN_FORMAT_DIFF_COLS = frozenset({"File1_Format", "File2_Format"})
 
 
 def write_report(
@@ -30,6 +31,7 @@ def write_report(
     column_formatting: list | None = None,
     sheet_presence: list | None = None,
     data_align_with_format: list | None = None,
+    numeric_column_totals: list | None = None,
 ):
     """Write report; format is chosen from file suffix (.html vs .xlsx)."""
     path = Path(output_path)
@@ -44,6 +46,7 @@ def write_report(
             column_formatting=column_formatting,
             sheet_presence=sheet_presence,
             data_align_with_format=data_align_with_format,
+            numeric_column_totals=numeric_column_totals,
         )
     else:
         write_report_excel(
@@ -55,6 +58,7 @@ def write_report(
             column_formatting=column_formatting,
             sheet_presence=sheet_presence,
             data_align_with_format=data_align_with_format,
+            numeric_column_totals=numeric_column_totals,
         )
 
 
@@ -68,6 +72,7 @@ def write_report_excel(
     column_formatting: list | None = None,
     sheet_presence: list | None = None,
     data_align_with_format: list | None = None,
+    numeric_column_totals: list | None = None,
 ):
     with pd.ExcelWriter(output_file, engine="openpyxl") as writer:
         wrote = False
@@ -80,6 +85,7 @@ def write_report_excel(
             pd.DataFrame(column_formatting).to_excel(
                 writer, sheet_name="Column_Format_Summary", index=False
             )
+            _style_column_format_summary_openpyxl(writer.book["Column_Format_Summary"])
             wrote = True
         if formatting_cells_sampled:
             pd.DataFrame(formatting_cells_sampled).to_excel(
@@ -89,6 +95,11 @@ def write_report_excel(
         if currency_totals:
             pd.DataFrame(currency_totals).to_excel(
                 writer, sheet_name="Amount_Total_Mismatch", index=False
+            )
+            wrote = True
+        if numeric_column_totals:
+            pd.DataFrame(numeric_column_totals).to_excel(
+                writer, sheet_name="Numeric_Column_Totals", index=False
             )
             wrote = True
         if header_align:
@@ -133,6 +144,29 @@ def _highlight_alignment_columns_openpyxl(ws, column_titles: frozenset[str]) -> 
 def _after_alignment_sheet(writer: pd.ExcelWriter, sheet_name: str, columns: frozenset[str]) -> None:
     ws = writer.book[sheet_name]
     _highlight_alignment_columns_openpyxl(ws, columns)
+
+
+def _style_column_format_summary_openpyxl(ws) -> None:
+    """Yellow fill on File1_Format / File2_Format cells when the two formats differ."""
+    if ws.max_row < 2:
+        return
+    headers = [str(c.value) if c.value is not None else "" for c in ws[1]]
+
+    def col_idx(name: str) -> int | None:
+        try:
+            return headers.index(name) + 1
+        except ValueError:
+            return None
+
+    i1, i2 = col_idx("File1_Format"), col_idx("File2_Format")
+    if i1 is None or i2 is None:
+        return
+
+    for r in range(2, ws.max_row + 1):
+        v1, v2 = ws.cell(r, i1).value, ws.cell(r, i2).value
+        if v1 != v2:
+            ws.cell(r, i1).fill = _ALIGNMENT_MISMATCH_FILL
+            ws.cell(r, i2).fill = _ALIGNMENT_MISMATCH_FILL
 
 
 def _style_data_cell_align_format_openpyxl(ws) -> None:
@@ -193,6 +227,32 @@ def _df_section(
     return f'<section class="block"><h2>{html.escape(title)}</h2>{table_html}</section>'
 
 
+def _df_section_column_format_summary(title: str, rows: list, empty_message: str) -> str:
+    """HTML for column format summary: highlight File1_Format / File2_Format when they differ."""
+    if not rows:
+        return (
+            f'<section class="block"><h2>{html.escape(title)}</h2>'
+            f'<p class="ok">{html.escape(empty_message)}</p></section>'
+        )
+    df = pd.DataFrame(rows)
+
+    def _row_styles(row: pd.Series):
+        f1 = row.get("File1_Format")
+        f2 = row.get("File2_Format")
+        differs = f1 != f2
+        return [
+            f"background-color: {_HTML_ALIGN_BG}" if differs and col in _COLUMN_FORMAT_DIFF_COLS else ""
+            for col in row.index
+        ]
+
+    styler = df.style.apply(_row_styles, axis=1).hide(axis="index")
+    table_html = styler.to_html(
+        table_attributes='class="tbl" border="0"',
+        escape=True,
+    )
+    return f'<section class="block"><h2>{html.escape(title)}</h2>{table_html}</section>'
+
+
 def _df_section_data_cell_align_format(title: str, rows: list, empty_message: str) -> str:
     """HTML for Data_Cell_Align_Format: green ``no data`` rows, yellow alignment cells on mismatches."""
     if not rows:
@@ -231,6 +291,7 @@ def write_report_html(
     column_formatting: list | None = None,
     sheet_presence: list | None = None,
     data_align_with_format: list | None = None,
+    numeric_column_totals: list | None = None,
 ):
     parts = [
         "<!DOCTYPE html>",
@@ -260,7 +321,7 @@ def write_report_html(
 
     if column_formatting is not None:
         parts.append(
-            _df_section(
+            _df_section_column_format_summary(
                 "Column format summary (first data cell)",
                 column_formatting,
                 "No column-level format differences.",
@@ -280,6 +341,14 @@ def write_report_html(
                 "Amount total mismatch — currency columns",
                 currency_totals,
                 "No currency column total mismatches.",
+            )
+        )
+    if numeric_column_totals is not None:
+        parts.append(
+            _df_section(
+                "Numeric column totals — (date/text Excel formats and datetime columns excluded)",
+                numeric_column_totals,
+                "No numeric totals rows (option off or no eligible columns).",
             )
         )
     parts.append(

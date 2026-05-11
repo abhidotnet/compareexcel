@@ -17,6 +17,7 @@ from compareexcel.core import (
     compare_data_cells_alignment_and_format,
     compare_formatting,
     compare_header_alignment,
+    compare_numeric_column_totals,
     sheet_data_presence_mismatch,
 )
 from compareexcel.report import write_report
@@ -86,6 +87,17 @@ def main():
             "cell number_format (default: 0.1). Ignored with --alignment-only."
         ),
     )
+    parser.add_argument(
+        "--numeric-column-totals",
+        "-nct",
+        action="store_true",
+        help=(
+            "Full mode only: for each shared column, sum values with pandas after excluding "
+            "columns classified as date or text from Excel number_format (first data cell per "
+            "column) and excluding datetime columns. Writes sheet Numeric_Column_Totals when "
+            "using --output, and prints a console section. Ignored with --alignment-only."
+        ),
+    )
 
     args = parser.parse_args()
 
@@ -140,6 +152,7 @@ def main():
     all_column_fmt: list[dict] = []
     all_cell_fmt: list[dict] = []
     all_currency: list[dict] = []
+    all_numeric_totals: list[dict] = []
     all_header_align: list[dict] = []
     all_data_align: list[dict] = []
     all_align_and_format: list[dict] = []
@@ -166,6 +179,10 @@ def main():
             for row in compare_currency_totals(df1, df2, ws1, ws2):
                 row = {**row, "Sheet": sheet}
                 all_currency.append(row)
+            if args.numeric_column_totals:
+                for row in compare_numeric_column_totals(df1, df2, ws1, ws2):
+                    row = {**row, "Sheet": sheet}
+                    all_numeric_totals.append(row)
             for row in compare_cell_formatting_sampled(ws1, ws2, args.sample_fraction):
                 row = {**row, "Sheet": sheet}
                 all_cell_fmt.append(row)
@@ -193,6 +210,11 @@ def main():
             "Mode: header alignment + one paired-data cell per column (alignment & format); "
             "empty paired columns → 'no data' (green). (--alignment-only)"
         )
+    elif args.numeric_column_totals:
+        print(
+            "Numeric column totals: enabled (--numeric-column-totals); "
+            "date/text Excel formats and datetime columns are excluded."
+        )
     print()
 
     _print_section(
@@ -217,6 +239,12 @@ def main():
             all_currency,
             "No mismatches.",
         )
+        if args.numeric_column_totals:
+            _print_section(
+                "Numeric column totals — (all eligible columns; date/text formats excluded)",
+                all_numeric_totals,
+                "No eligible columns after excluding date/text/datetime, or no data.",
+            )
 
     _print_section(
         "Header alignment mismatch —",
@@ -245,6 +273,9 @@ def main():
             data_align=all_data_align if not args.alignment_only else None,
             header_align=all_header_align,
             currency_totals=all_currency if not args.alignment_only else None,
+            numeric_column_totals=all_numeric_totals
+            if (not args.alignment_only and args.numeric_column_totals)
+            else None,
             column_formatting=all_column_fmt if not args.alignment_only else None,
             sheet_presence=all_sheet_presence,
             data_align_with_format=all_align_and_format if args.alignment_only else None,

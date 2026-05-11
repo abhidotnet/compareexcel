@@ -84,8 +84,11 @@ def _analyze_format(fmt):
         result["type"] = "currency"
     elif "0" in f or "#" in f:
         result["type"] = "numeric"
-    else:
+    elif "@" in str(fmt):
         result["type"] = "text"
+    else:
+        # e.g. "General" — not a structured number pattern; totals use coercion + per-column rules
+        result["type"] = "unknown"
 
     result["decimals"] = len(f.split(".")[-1]) if "." in f else 0
     result["thousands"] = "," in f
@@ -395,6 +398,84 @@ def _currency_columns_from_formats(ws1, ws2) -> set[str]:
         if t1 == "currency" or t2 == "currency":
             out.add(col)
     return out
+
+
+def _numeric_total_eligible_columns(
+    df1: pd.DataFrame, df2: pd.DataFrame, ws1, ws2
+) -> list[str]:
+    """
+    Column names (common to both frames) to include in numeric totals.
+
+    Excludes columns whose Excel number_format (first non-blank data cell) is
+    classified as **date** or **text** on either sheet, and columns that pandas
+    reads as datetime (so labeled dates are not summed).
+    """
+    df1 = df1.copy()
+    df2 = df2.copy()
+    df1.columns = [str(c).strip() if c is not None else "" for c in df1.columns]
+    df2.columns = [str(c).strip() if c is not None else "" for c in df2.columns]
+
+    f1 = get_column_formats(ws1)
+    f2 = get_column_formats(ws2)
+    common = sorted(set(df1.columns) & set(df2.columns))
+    out: list[str] = []
+
+    for col in common:
+        if pd.api.types.is_datetime64_any_dtype(df1[col]) or pd.api.types.is_datetime64_any_dtype(
+            df2[col]
+        ):
+            continue
+        raw1 = f1.get(col, "No data rows or all blank")
+        raw2 = f2.get(col, "No data rows or all blank")
+        t1 = _analyze_format(raw1).get("type")
+        t2 = _analyze_format(raw2).get("type")
+        if t1 in ("date", "text") or t2 in ("date", "text"):
+            continue
+        nn1 = pd.to_numeric(df1[col], errors="coerce").notna().sum()
+        nn2 = pd.to_numeric(df2[col], errors="coerce").notna().sum()
+        if nn1 == 0 and nn2 == 0:
+            continue
+        out.append(col)
+
+    return out
+
+
+def compare_numeric_column_totals(
+    df1: pd.DataFrame, df2: pd.DataFrame, ws1, ws2, tol: float = 1e-6
+) -> list[dict[str, Any]]:
+    """
+    Sum each eligible column with ``pd.to_numeric(..., errors="coerce")``.
+
+    Eligibility matches :func:`_numeric_total_eligible_columns` (omit date/text
+    Excel formats and datetime dtypes). Returns one row per column with totals
+    and whether they match within ``tol``.
+    """
+    df1 = df1.copy()
+    df2 = df2.copy()
+    df1.columns = [str(c).strip() if c is not None else "" for c in df1.columns]
+    df2.columns = [str(c).strip() if c is not None else "" for c in df2.columns]
+
+    cols = _numeric_total_eligible_columns(df1, df2, ws1, ws2)
+    rows: list[dict[str, Any]] = []
+
+    for col in cols:
+        s1 = pd.to_numeric(df1[col], errors="coerce").sum()
+        s2 = pd.to_numeric(df2[col], errors="coerce").sum()
+        if isinstance(s1, float) and math.isnan(s1):
+            s1 = 0.0
+        if isinstance(s2, float) and math.isnan(s2):
+            s2 = 0.0
+        diff = float(s2) - float(s1)
+        match = abs(diff) < tol
+        rows.append({
+            "Column": col,
+            "File1_Total": round(float(s1), 6),
+            "File2_Total": round(float(s2), 6),
+            "Difference": round(diff, 6),
+            "Totals_Match": "Yes" if match else "No",
+        })
+
+    return rows
 
 
 def compare_currency_totals(df1: pd.DataFrame, df2: pd.DataFrame, ws1, ws2, tol: float = 1e-6):
