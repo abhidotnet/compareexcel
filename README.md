@@ -9,6 +9,7 @@
 - **Currency column totals** — in **Excel/HTML reports** (full mode), every column whose format is **currency** on at least one file gets `File1_Total`, `File2_Total`, `Difference`, and `Totals_Match`. The console still lists **mismatches only** under “Amount total mismatch”.
 - **Numeric column totals** — in **Excel/HTML reports** (full mode), the same style of table for columns that pass Excel format rules (exclude date/text formats and datetime dtypes). Optional **`--numeric-column-totals` / `-nct`** adds **quick** pandas-only sums (no Excel format checks), printed to the console and, with `--output`, sheet `Quick_Numeric_Column_Totals` / matching HTML section.
 - **Sheet names only** — optional **`--compare-sheet-names`** lists every worksheet in each file (in workbook order), marks each name as matching the other file or missing from it, prints a short summary of names only in one workbook, then exits without running cell or format comparisons.
+- **Per-sheet row counts** — optional **`--row-counts`** prints each worksheet’s **openpyxl** `max_row` (and File2−File1 delta when the sheet exists in both), after the run header; with **`--output`**, adds Excel sheet **`Rowcounts`** and a matching HTML block.
 
 Console output uses readable section titles (for example “Header alignment mismatch —”, “Amount total mismatch —”). A short summary is always printed; use `--output` to write a full **Excel** or **HTML** report.
 
@@ -38,7 +39,7 @@ pip install -e .
 ```text
 compareExcel FILE1 FILE2 [--sheet SHEET] [--output PATH] [-o PATH]
     [--sample-fraction FRACTION] [--alignment-only] [--numeric-column-totals]
-    [--compare-sheet-names]
+    [--compare-sheet-names] [--row-counts]
 ```
 
 | Argument / option | Description |
@@ -50,6 +51,7 @@ compareExcel FILE1 FILE2 [--sheet SHEET] [--output PATH] [-o PATH]
 | `--alignment-only` / `--ao` | **No pandas reads** (no currency totals). Compares **header alignment** and, for each column, the **first data row** where **both** files have a non-blank value: **alignment and `number_format`**. Columns with **no** such row are listed with Note **no data** (green text in Excel/HTML; green ANSI in the console). Skips column format summary and the sampled cell-format pass. |
 | `--numeric-column-totals` / `-nct` | **Full mode only:** quick per-column sums using pandas only (no Excel `number_format` checks on columns). Prints a console section; with `--output`, adds `Quick_Numeric_Column_Totals` (Excel) or the matching HTML block. Ignored with `--alignment-only`. |
 | `--compare-sheet-names` | **Sheet-name mode only:** print all sheet names from File 1 and File 2 (workbook order), label each as present in both workbooks or only in one, print a summary (matching names, only-in-file-1, only-in-file-2), then exit. No `--output` report, no formatting or alignment checks. Other comparison flags are not applied. |
+| `--row-counts` | After the comparison header, print a **per-sheet row count** table (`File1_Max_Row`, `File2_Max_Row`, delta, `Present_In`). Uses **openpyxl** `Worksheet.max_row`. With `--sheet`, only that sheet; otherwise every sheet name in **either** file (file 1 order, then names only in file 2). With `--output`, adds **`Rowcounts`** (Excel) or the matching HTML section. |
 
 ### Excel report sheets (when using `.xlsx`)
 
@@ -57,6 +59,8 @@ Sheets are created only when there is data for that category (otherwise a minima
 
 | Sheet name | Content |
 |------------|---------|
+| `Sheet_Blank_Mismatch` | Same sheet name: one workbook has no cell data, the other does. |
+| `Rowcounts` | **With `--row-counts`:** per-sheet `max_row` for each file, delta, and whether the sheet is in both files or only one. |
 | `Column_Format_Summary` | First data cell `number_format` per column (skipped in `--alignment-only` mode when writing from the CLI). |
 | `Cell_Format_Sampled` | Rows where the sampled cells’ number formats differ. |
 | `Currency_Column_Totals` | **Full mode:** all currency-format columns with totals and `Totals_Match` (per sheet from CLI). |
@@ -76,6 +80,7 @@ compareExcel workbook_a.xlsx workbook_b.xlsx --alignment-only -o align.html
 compareExcel workbook_a.xlsx workbook_b.xlsx -o report.xlsx
 compareExcel workbook_a.xlsx workbook_b.xlsx --numeric-column-totals -o report_with_quick.xlsx
 compareExcel workbook_a.xlsx workbook_b.xlsx --compare-sheet-names
+compareExcel workbook_a.xlsx workbook_b.xlsx --row-counts -o with_rows.xlsx
 ```
 
 ## Library usage
@@ -96,6 +101,7 @@ from compareexcel import (
     compare_header_alignment,
     compare_numeric_column_totals,
     compare_numeric_column_totals_quick,
+    sheet_row_count_rows,
     write_report,
 )
 
@@ -114,6 +120,7 @@ numeric_totals = compare_numeric_column_totals(df1, df2, ws1, ws2)
 quick_totals = compare_numeric_column_totals_quick(df1, df2)  # optional; omit from write_report if unused
 header_align = compare_header_alignment(ws1, ws2)
 data_align = compare_data_alignment(ws1, ws2)  # optional: mismatch_limit=50
+row_counts = sheet_row_count_rows(wb1, wb2, sheets=[sheet])  # optional; omit or pass row_counts=None
 
 write_report(
     "out.xlsx",
@@ -124,10 +131,11 @@ write_report(
     numeric_column_totals=numeric_totals,
     quick_numeric_column_totals=quick_totals,
     column_formatting=column_fmt,
+    row_counts=row_counts,
 )
 ```
 
-`write_report` chooses **Excel** vs **HTML** from the path suffix (`.html` / `.htm` → HTML; otherwise Excel). Pass `column_formatting=None` to omit the column summary section in HTML or the `Column_Format_Summary` sheet in Excel.
+`write_report` chooses **Excel** vs **HTML** from the path suffix (`.html` / `.htm` → HTML; otherwise Excel). Pass `column_formatting=None` to omit the column summary section in HTML or the `Column_Format_Summary` sheet in Excel. Pass `row_counts=None` (default) unless you built a table with **`sheet_row_count_rows`** (adds **`Rowcounts`** / HTML section when provided).
 
 Pass **`currency_totals`** as the result of **`compare_currency_column_totals`** (all currency columns) for the `Currency_Column_Totals` sheet; use **`compare_currency_totals`** when you only need mismatch rows. Pass **`quick_numeric_column_totals=None`** (default) unless you want the quick pandas-only table.
 

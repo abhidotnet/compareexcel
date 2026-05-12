@@ -13,6 +13,7 @@ from compareexcel.core import (
     compare_numeric_column_totals_quick,
     get_column_formats,
     sheet_data_presence_mismatch,
+    sheet_row_count_rows,
     worksheet_has_non_blank_data,
 )
 from compareexcel.report import write_report
@@ -33,6 +34,7 @@ __all__ = [
     "compare_numeric_column_totals_quick",
     "get_column_formats",
     "sheet_data_presence_mismatch",
+    "sheet_row_count_rows",
     "worksheet_has_non_blank_data",
     "write_report",
 ]

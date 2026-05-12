@@ -55,6 +55,7 @@ def write_report(
     data_align_with_format: list | None = None,
     numeric_column_totals: list | None = None,
     quick_numeric_column_totals: list | None = None,
+    row_counts: list | None = None,
 ):
     """Write report; format is chosen from file suffix (.html vs .xlsx)."""
     path = Path(output_path)
@@ -71,6 +72,7 @@ def write_report(
             data_align_with_format=data_align_with_format,
             numeric_column_totals=numeric_column_totals,
             quick_numeric_column_totals=quick_numeric_column_totals,
+            row_counts=row_counts,
         )
     else:
         write_report_excel(
@@ -84,6 +86,7 @@ def write_report(
             data_align_with_format=data_align_with_format,
             numeric_column_totals=numeric_column_totals,
             quick_numeric_column_totals=quick_numeric_column_totals,
+            row_counts=row_counts,
         )
 
 
@@ -99,6 +102,7 @@ def write_report_excel(
     data_align_with_format: list | None = None,
     numeric_column_totals: list | None = None,
     quick_numeric_column_totals: list | None = None,
+    row_counts: list | None = None,
 ):
     with pd.ExcelWriter(output_file, engine="openpyxl") as writer:
         wrote = False
@@ -106,6 +110,20 @@ def write_report_excel(
             pd.DataFrame(sheet_presence).to_excel(
                 writer, sheet_name="Sheet_Blank_Mismatch", index=False
             )
+            wrote = True
+        if row_counts is not None:
+            df_rc = pd.DataFrame(row_counts)
+            if df_rc.empty:
+                df_rc = pd.DataFrame(
+                    columns=[
+                        "Sheet",
+                        "File1_Max_Row",
+                        "File2_Max_Row",
+                        "Row_Delta_File2_minus_File1",
+                        "Present_In",
+                    ]
+                )
+            df_rc.to_excel(writer, sheet_name="Rowcounts", index=False)
             wrote = True
         if column_formatting:
             pd.DataFrame(column_formatting).to_excel(
@@ -321,6 +339,7 @@ def write_report_html(
     data_align_with_format: list | None = None,
     numeric_column_totals: list | None = None,
     quick_numeric_column_totals: list | None = None,
+    row_counts: list | None = None,
 ):
     parts = [
         "<!DOCTYPE html>",
@@ -347,6 +366,15 @@ def write_report_html(
             "None — both files have data on each compared sheet, or both are empty.",
         )
     )
+
+    if row_counts is not None:
+        parts.append(
+            _df_section(
+                "Per-sheet row counts (openpyxl max_row; Row_Delta = File2 − File1 when both exist)",
+                row_counts,
+                "No worksheets.",
+            )
+        )
 
     if column_formatting is not None:
         parts.append(

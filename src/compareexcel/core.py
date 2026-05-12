@@ -372,6 +372,62 @@ def worksheet_has_non_blank_data(ws) -> bool:
     return False
 
 
+def _sheet_names_union_order(wb1, wb2) -> list[str]:
+    """All sheet names: workbook 1 order, then names only in workbook 2."""
+    seen: set[str] = set()
+    out: list[str] = []
+    for n in wb1.sheetnames:
+        if n not in seen:
+            seen.add(n)
+            out.append(n)
+    for n in wb2.sheetnames:
+        if n not in seen:
+            seen.add(n)
+            out.append(n)
+    return out
+
+
+def sheet_row_count_rows(wb1, wb2, *, sheets: list[str] | None = None) -> list[dict[str, Any]]:
+    """
+    Build rows for a per-sheet row-count table using openpyxl ``Worksheet.max_row``
+    (last row index the worksheet reports as used).
+
+    If ``sheets`` is ``None``, include every sheet name that appears in either workbook
+    (file 1 order, then names only in file 2). If ``sheets`` is a list, only those
+    names are included (in that order).
+    """
+    names1 = set(wb1.sheetnames)
+    names2 = set(wb2.sheetnames)
+    if sheets is None:
+        ordered = _sheet_names_union_order(wb1, wb2)
+    else:
+        ordered = list(sheets)
+
+    rows: list[dict[str, Any]] = []
+    for name in ordered:
+        in1 = name in names1
+        in2 = name in names2
+        r1 = wb1[name].max_row if in1 else None
+        r2 = wb2[name].max_row if in2 else None
+        delta: int | str = ""
+        if in1 and in2 and r1 is not None and r2 is not None:
+            delta = int(r2) - int(r1)
+        if in1 and in2:
+            present = "both"
+        elif in1:
+            present = "File 1 only"
+        else:
+            present = "File 2 only"
+        rows.append({
+            "Sheet": name,
+            "File1_Max_Row": r1 if in1 else "",
+            "File2_Max_Row": r2 if in2 else "",
+            "Row_Delta_File2_minus_File1": delta,
+            "Present_In": present,
+        })
+    return rows
+
+
 def sheet_data_presence_mismatch(ws1, ws2, sheet_name: str) -> dict[str, Any] | None:
     """
     When one sheet has no data (all blank cells) and the other does, return one

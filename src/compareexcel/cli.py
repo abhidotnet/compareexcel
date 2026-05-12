@@ -20,6 +20,7 @@ from compareexcel.core import (
     compare_numeric_column_totals,
     compare_numeric_column_totals_quick,
     sheet_data_presence_mismatch,
+    sheet_row_count_rows,
 )
 from compareexcel.report import write_report
 
@@ -163,6 +164,15 @@ def main():
             "Does not run formatting, alignment, or totals comparisons."
         ),
     )
+    parser.add_argument(
+        "--row-counts",
+        action="store_true",
+        help=(
+            "Print a per-sheet row-count summary (openpyxl Worksheet.max_row) after the run "
+            "header, and add a Rowcounts sheet (Excel) or HTML section when using --output. "
+            "With --sheet, only that sheet is listed; otherwise every sheet name in either file."
+        ),
+    )
 
     args = parser.parse_args()
 
@@ -203,6 +213,12 @@ def main():
             if names2 - names1:
                 print(f"  Only in file 2: {sorted(names2 - names1)}")
             print(f"  Comparing common sheets only: {sheets}\n")
+
+    row_count_rows: list | None = None
+    if args.row_counts:
+        row_count_rows = sheet_row_count_rows(
+            wb1, wb2, sheets=sheets if args.sheet else None
+        )
 
     dfs1: dict = {}
     dfs2: dict = {}
@@ -288,7 +304,16 @@ def main():
             "Quick numeric column totals: enabled (--numeric-column-totals); "
             "pandas sums only (no Excel format checks on columns)."
         )
+    if args.row_counts:
+        print("Per-sheet row counts: enabled (--row-counts; openpyxl max_row).")
     print()
+
+    if args.row_counts:
+        _print_section(
+            "Per-sheet row counts (openpyxl Worksheet.max_row; Δ = File2 − File1 when both have the sheet) —",
+            row_count_rows,
+            "No worksheets.",
+        )
 
     _print_section(
         "Sheet empty vs data mismatch — (same sheet name, one workbook has no cell data)",
@@ -353,6 +378,7 @@ def main():
             column_formatting=all_column_fmt if not args.alignment_only else None,
             sheet_presence=all_sheet_presence,
             data_align_with_format=all_align_and_format if args.alignment_only else None,
+            row_counts=row_count_rows if args.row_counts else None,
         )
         print(f"Report written to: {args.output}")
 
