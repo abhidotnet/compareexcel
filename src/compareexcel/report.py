@@ -20,6 +20,28 @@ _HEADER_ALIGN_COLS = frozenset({"File1_Header_Alignment", "File2_Header_Alignmen
 _DATA_ALIGN_COLS = frozenset({"File1_Alignment", "File2_Alignment"})
 _COLUMN_FORMAT_DIFF_COLS = frozenset({"File1_Format", "File2_Format"})
 
+# Column order for totals sheets (CLI always adds Sheet; library callers may omit).
+_TOTALS_SHEET_COLUMNS = [
+    "Sheet",
+    "Column",
+    "File1_Total",
+    "File2_Total",
+    "Difference",
+    "Totals_Match",
+]
+
+
+def _dataframe_for_totals_section(rows: list | None) -> pd.DataFrame | None:
+    if rows is None:
+        return None
+    if not rows:
+        return pd.DataFrame(columns=_TOTALS_SHEET_COLUMNS)
+    df = pd.DataFrame(rows)
+    for c in _TOTALS_SHEET_COLUMNS:
+        if c not in df.columns:
+            df[c] = ""
+    return df[_TOTALS_SHEET_COLUMNS]
+
 
 def write_report(
     output_path: str | Path,
@@ -32,6 +54,7 @@ def write_report(
     sheet_presence: list | None = None,
     data_align_with_format: list | None = None,
     numeric_column_totals: list | None = None,
+    quick_numeric_column_totals: list | None = None,
 ):
     """Write report; format is chosen from file suffix (.html vs .xlsx)."""
     path = Path(output_path)
@@ -47,6 +70,7 @@ def write_report(
             sheet_presence=sheet_presence,
             data_align_with_format=data_align_with_format,
             numeric_column_totals=numeric_column_totals,
+            quick_numeric_column_totals=quick_numeric_column_totals,
         )
     else:
         write_report_excel(
@@ -59,6 +83,7 @@ def write_report(
             sheet_presence=sheet_presence,
             data_align_with_format=data_align_with_format,
             numeric_column_totals=numeric_column_totals,
+            quick_numeric_column_totals=quick_numeric_column_totals,
         )
 
 
@@ -73,6 +98,7 @@ def write_report_excel(
     sheet_presence: list | None = None,
     data_align_with_format: list | None = None,
     numeric_column_totals: list | None = None,
+    quick_numeric_column_totals: list | None = None,
 ):
     with pd.ExcelWriter(output_file, engine="openpyxl") as writer:
         wrote = False
@@ -92,15 +118,17 @@ def write_report_excel(
                 writer, sheet_name="Cell_Format_Sampled", index=False
             )
             wrote = True
-        if currency_totals:
-            pd.DataFrame(currency_totals).to_excel(
-                writer, sheet_name="Amount_Total_Mismatch", index=False
-            )
+        df_currency = _dataframe_for_totals_section(currency_totals)
+        if df_currency is not None:
+            df_currency.to_excel(writer, sheet_name="Currency_Column_Totals", index=False)
             wrote = True
-        if numeric_column_totals:
-            pd.DataFrame(numeric_column_totals).to_excel(
-                writer, sheet_name="Numeric_Column_Totals", index=False
-            )
+        df_numeric = _dataframe_for_totals_section(numeric_column_totals)
+        if df_numeric is not None:
+            df_numeric.to_excel(writer, sheet_name="Numeric_Column_Totals", index=False)
+            wrote = True
+        df_quick = _dataframe_for_totals_section(quick_numeric_column_totals)
+        if df_quick is not None:
+            df_quick.to_excel(writer, sheet_name="Quick_Numeric_Column_Totals", index=False)
             wrote = True
         if header_align:
             pd.DataFrame(header_align).to_excel(
@@ -292,6 +320,7 @@ def write_report_html(
     sheet_presence: list | None = None,
     data_align_with_format: list | None = None,
     numeric_column_totals: list | None = None,
+    quick_numeric_column_totals: list | None = None,
 ):
     parts = [
         "<!DOCTYPE html>",
@@ -338,17 +367,25 @@ def write_report_html(
     if currency_totals is not None:
         parts.append(
             _df_section(
-                "Amount total mismatch — currency columns",
+                "Currency column totals (Excel format: currency on at least one file)",
                 currency_totals,
-                "No currency column total mismatches.",
+                "No currency columns detected from Excel number formats.",
             )
         )
     if numeric_column_totals is not None:
         parts.append(
             _df_section(
-                "Numeric column totals — (date/text Excel formats and datetime columns excluded)",
+                "Numeric column totals (date/text Excel formats and datetime columns excluded)",
                 numeric_column_totals,
-                "No numeric totals rows (option off or no eligible columns).",
+                "No eligible columns after format exclusions, or no data.",
+            )
+        )
+    if quick_numeric_column_totals is not None:
+        parts.append(
+            _df_section(
+                "Quick numeric column totals (pandas only; no Excel format checks)",
+                quick_numeric_column_totals,
+                "No shared columns with coercible numeric values (excluding datetime), or no data.",
             )
         )
     parts.append(

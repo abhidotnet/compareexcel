@@ -478,9 +478,67 @@ def compare_numeric_column_totals(
     return rows
 
 
-def compare_currency_totals(df1: pd.DataFrame, df2: pd.DataFrame, ws1, ws2, tol: float = 1e-6):
+def _quick_numeric_total_columns(df1: pd.DataFrame, df2: pd.DataFrame) -> list[str]:
+    """Shared columns with no datetime dtype and at least one coercible numeric value (pandas only)."""
+    df1 = df1.copy()
+    df2 = df2.copy()
+    df1.columns = [str(c).strip() if c is not None else "" for c in df1.columns]
+    df2.columns = [str(c).strip() if c is not None else "" for c in df2.columns]
+    common = sorted(set(df1.columns) & set(df2.columns))
+    out: list[str] = []
+    for col in common:
+        if pd.api.types.is_datetime64_any_dtype(df1[col]) or pd.api.types.is_datetime64_any_dtype(
+            df2[col]
+        ):
+            continue
+        nn1 = pd.to_numeric(df1[col], errors="coerce").notna().sum()
+        nn2 = pd.to_numeric(df2[col], errors="coerce").notna().sum()
+        if nn1 == 0 and nn2 == 0:
+            continue
+        out.append(col)
+    return out
+
+
+def compare_numeric_column_totals_quick(df1: pd.DataFrame, df2: pd.DataFrame, tol: float = 1e-6):
     """
-    Sum numeric values for columns whose Excel number_format is currency on at least one sheet.
+    Per-column sums using ``pd.to_numeric`` only (no openpyxl / Excel ``number_format``).
+
+    Intended for quick checks via CLI ``--numeric-column-totals``: excludes datetime dtypes
+    and columns with no coercible numeric values in either file.
+    """
+    df1 = df1.copy()
+    df2 = df2.copy()
+    df1.columns = [str(c).strip() if c is not None else "" for c in df1.columns]
+    df2.columns = [str(c).strip() if c is not None else "" for c in df2.columns]
+
+    cols = _quick_numeric_total_columns(df1, df2)
+    rows: list[dict[str, Any]] = []
+    for col in cols:
+        s1 = pd.to_numeric(df1[col], errors="coerce").sum()
+        s2 = pd.to_numeric(df2[col], errors="coerce").sum()
+        if isinstance(s1, float) and math.isnan(s1):
+            s1 = 0.0
+        if isinstance(s2, float) and math.isnan(s2):
+            s2 = 0.0
+        diff = float(s2) - float(s1)
+        match = abs(diff) < tol
+        rows.append({
+            "Column": col,
+            "File1_Total": round(float(s1), 6),
+            "File2_Total": round(float(s2), 6),
+            "Difference": round(diff, 6),
+            "Totals_Match": "Yes" if match else "No",
+        })
+    return rows
+
+
+def compare_currency_column_totals(
+    df1: pd.DataFrame, df2: pd.DataFrame, ws1, ws2, tol: float = 1e-6
+) -> list[dict[str, Any]]:
+    """
+    Sum every shared column whose Excel format is currency on at least one sheet.
+
+    Returns one row per such column with ``Totals_Match`` (for Excel/HTML reports).
     """
     df1 = df1.copy()
     df2 = df2.copy()
@@ -488,7 +546,7 @@ def compare_currency_totals(df1: pd.DataFrame, df2: pd.DataFrame, ws1, ws2, tol:
     df2.columns = [str(c).strip() if c is not None else "" for c in df2.columns]
 
     currency_cols = _currency_columns_from_formats(ws1, ws2)
-    diffs: list[dict[str, Any]] = []
+    rows: list[dict[str, Any]] = []
 
     for col in sorted(currency_cols):
         if col not in df1.columns or col not in df2.columns:
@@ -500,12 +558,22 @@ def compare_currency_totals(df1: pd.DataFrame, df2: pd.DataFrame, ws1, ws2, tol:
         if isinstance(s2, float) and math.isnan(s2):
             s2 = 0.0
         diff = float(s2) - float(s1)
-        if abs(diff) >= tol:
-            diffs.append({
-                "Column": col,
-                "File1_Total": round(float(s1), 6),
-                "File2_Total": round(float(s2), 6),
-                "Difference": round(diff, 6),
-            })
+        match = abs(diff) < tol
+        rows.append({
+            "Column": col,
+            "File1_Total": round(float(s1), 6),
+            "File2_Total": round(float(s2), 6),
+            "Difference": round(diff, 6),
+            "Totals_Match": "Yes" if match else "No",
+        })
 
-    return diffs
+    return rows
+
+
+def compare_currency_totals(df1: pd.DataFrame, df2: pd.DataFrame, ws1, ws2, tol: float = 1e-6):
+    """
+    Rows from :func:`compare_currency_column_totals` where totals differ (``Totals_Match`` is ``No``).
+
+    Use :func:`compare_currency_column_totals` when building a full **Excel/HTML** totals table.
+    """
+    return [r for r in compare_currency_column_totals(df1, df2, ws1, ws2, tol) if r["Totals_Match"] == "No"]

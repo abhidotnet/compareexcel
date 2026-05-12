@@ -12,12 +12,13 @@ from openpyxl import load_workbook
 from compareexcel.core import (
     ALIGN_ONLY_NO_DATA_NOTE,
     compare_cell_formatting_sampled,
-    compare_currency_totals,
+    compare_currency_column_totals,
     compare_data_alignment,
     compare_data_cells_alignment_and_format,
     compare_formatting,
     compare_header_alignment,
     compare_numeric_column_totals,
+    compare_numeric_column_totals_quick,
     sheet_data_presence_mismatch,
 )
 from compareexcel.report import write_report
@@ -46,6 +47,62 @@ def _print_section(title: str, rows: list, describe_empty: str):
             print(line)
         else:
             print(f"  {r}")
+    print()
+
+
+def _print_sheet_name_comparison(path1: str, path2: str, wb1, wb2) -> None:
+    """Print every sheet from each file with match / missing-from-other-file labels."""
+    names1 = list(wb1.sheetnames)
+    names2 = list(wb2.sheetnames)
+    set1 = set(names1)
+    set2 = set(names2)
+    base1 = os.path.basename(path1)
+    base2 = os.path.basename(path2)
+
+    print()
+    print("=== Sheet name comparison ===")
+    print(f"File 1: {base1}")
+    print(f"File 2: {base2}")
+    print()
+
+    print(f"All sheets in File 1 ({len(names1)}), in workbook order:")
+    for name in names1:
+        if name in set2:
+            print(f"  [MATCH]     {name!r}  — present in File 2")
+        else:
+            print(f"  [MISSING]   {name!r}  — not in File 2 (only in File 1)")
+    print()
+
+    print(f"All sheets in File 2 ({len(names2)}), in workbook order:")
+    for name in names2:
+        if name in set1:
+            print(f"  [MATCH]     {name!r}  — present in File 1")
+        else:
+            print(f"  [MISSING]   {name!r}  — not in File 1 (only in File 2)")
+    print()
+
+    common = sorted(set1 & set2)
+    only1 = sorted(set1 - set2)
+    only2 = sorted(set2 - set1)
+    print("Summary — sheet names:")
+    print(f"  Matching (in both files): {len(common)}")
+    if common:
+        for n in common:
+            print(f"    {n!r}")
+    else:
+        print("    (none)")
+    print(f"  Only in File 1: {len(only1)}")
+    if only1:
+        for n in only1:
+            print(f"    {n!r}")
+    else:
+        print("    (none)")
+    print(f"  Only in File 2: {len(only2)}")
+    if only2:
+        for n in only2:
+            print(f"    {n!r}")
+    else:
+        print("    (none)")
     print()
 
 
@@ -92,10 +149,18 @@ def main():
         "-nct",
         action="store_true",
         help=(
-            "Full mode only: for each shared column, sum values with pandas after excluding "
-            "columns classified as date or text from Excel number_format (first data cell per "
-            "column) and excluding datetime columns. Writes sheet Numeric_Column_Totals when "
-            "using --output, and prints a console section. Ignored with --alignment-only."
+            "Full mode only: quick per-column sums using pandas only (no Excel number_format "
+            "checks). Prints a console section; with --output, adds sheet Quick_Numeric_Column_Totals "
+            "(and matching HTML section). Ignored with --alignment-only."
+        ),
+    )
+    parser.add_argument(
+        "--compare-sheet-names",
+        action="store_true",
+        help=(
+            "List every sheet in File 1 and File 2 (workbook order), label each as matching the "
+            "other file or missing from it, print a summary of names only in one file, then exit. "
+            "Does not run formatting, alignment, or totals comparisons."
         ),
     )
 
@@ -114,6 +179,10 @@ def main():
 
     wb1 = load_workbook(args.file1, data_only=False)
     wb2 = load_workbook(args.file2, data_only=False)
+
+    if args.compare_sheet_names:
+        _print_sheet_name_comparison(args.file1, args.file2, wb1, wb2)
+        sys.exit(0)
 
     names1 = set(wb1.sheetnames)
     names2 = set(wb2.sheetnames)
@@ -151,8 +220,9 @@ def main():
 
     all_column_fmt: list[dict] = []
     all_cell_fmt: list[dict] = []
-    all_currency: list[dict] = []
-    all_numeric_totals: list[dict] = []
+    all_currency_report: list[dict] = []
+    all_numeric_report: list[dict] = []
+    all_quick_numeric: list[dict] = []
     all_header_align: list[dict] = []
     all_data_align: list[dict] = []
     all_align_and_format: list[dict] = []
@@ -176,13 +246,16 @@ def main():
             for row in compare_formatting(ws1, ws2):
                 row = {**row, "Sheet": sheet}
                 all_column_fmt.append(row)
-            for row in compare_currency_totals(df1, df2, ws1, ws2):
+            for row in compare_currency_column_totals(df1, df2, ws1, ws2):
                 row = {**row, "Sheet": sheet}
-                all_currency.append(row)
+                all_currency_report.append(row)
+            for row in compare_numeric_column_totals(df1, df2, ws1, ws2):
+                row = {**row, "Sheet": sheet}
+                all_numeric_report.append(row)
             if args.numeric_column_totals:
-                for row in compare_numeric_column_totals(df1, df2, ws1, ws2):
+                for row in compare_numeric_column_totals_quick(df1, df2):
                     row = {**row, "Sheet": sheet}
-                    all_numeric_totals.append(row)
+                    all_quick_numeric.append(row)
             for row in compare_cell_formatting_sampled(ws1, ws2, args.sample_fraction):
                 row = {**row, "Sheet": sheet}
                 all_cell_fmt.append(row)
@@ -212,8 +285,8 @@ def main():
         )
     elif args.numeric_column_totals:
         print(
-            "Numeric column totals: enabled (--numeric-column-totals); "
-            "date/text Excel formats and datetime columns are excluded."
+            "Quick numeric column totals: enabled (--numeric-column-totals); "
+            "pandas sums only (no Excel format checks on columns)."
         )
     print()
 
@@ -236,14 +309,14 @@ def main():
         )
         _print_section(
             "Amount total mismatch — (currency columns by Excel number format)",
-            all_currency,
+            [r for r in all_currency_report if r.get("Totals_Match") == "No"],
             "No mismatches.",
         )
         if args.numeric_column_totals:
             _print_section(
-                "Numeric column totals — (all eligible columns; date/text formats excluded)",
-                all_numeric_totals,
-                "No eligible columns after excluding date/text/datetime, or no data.",
+                "Quick numeric column totals — (pandas only; no Excel format checks)",
+                all_quick_numeric,
+                "No shared columns with coercible numeric values (excluding datetime), or no data.",
             )
 
     _print_section(
@@ -272,8 +345,9 @@ def main():
             formatting_cells_sampled=all_cell_fmt if not args.alignment_only else None,
             data_align=all_data_align if not args.alignment_only else None,
             header_align=all_header_align,
-            currency_totals=all_currency if not args.alignment_only else None,
-            numeric_column_totals=all_numeric_totals
+            currency_totals=all_currency_report if not args.alignment_only else None,
+            numeric_column_totals=all_numeric_report if not args.alignment_only else None,
+            quick_numeric_column_totals=all_quick_numeric
             if (not args.alignment_only and args.numeric_column_totals)
             else None,
             column_formatting=all_column_fmt if not args.alignment_only else None,
