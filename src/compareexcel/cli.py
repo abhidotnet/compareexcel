@@ -25,6 +25,23 @@ from compareexcel.core import (
 from compareexcel.report import write_report
 
 
+def _write_report_row_counts_only(output_path: str, row_counts: list) -> None:
+    """Minimal Excel/HTML report containing only the Rowcounts table."""
+    write_report(
+        output_path,
+        formatting_cells_sampled=None,
+        data_align=None,
+        header_align=None,
+        currency_totals=None,
+        column_formatting=None,
+        sheet_presence=None,
+        data_align_with_format=None,
+        numeric_column_totals=None,
+        quick_numeric_column_totals=None,
+        row_counts=row_counts,
+    )
+
+
 def _ensure_utf8_stdio():
     for stream in (sys.stdout, sys.stderr):
         if hasattr(stream, "reconfigure"):
@@ -168,9 +185,10 @@ def main():
         "--row-counts",
         action="store_true",
         help=(
-            "Print a per-sheet row-count summary (openpyxl Worksheet.max_row) after the run "
-            "header, and add a Rowcounts sheet (Excel) or HTML section when using --output. "
-            "With --sheet, only that sheet is listed; otherwise every sheet name in either file."
+            "Row counts only: print the per-sheet table (openpyxl max_row) and exit; no "
+            "formatting, alignment, or totals comparisons. With --output, writes a minimal report "
+            "with only the Rowcounts sheet / HTML section. Without this flag, a normal compare "
+            "still always includes Rowcounts whenever you use --output."
         ),
     )
 
@@ -214,11 +232,25 @@ def main():
                 print(f"  Only in file 2: {sorted(names2 - names1)}")
             print(f"  Comparing common sheets only: {sheets}\n")
 
-    row_count_rows: list | None = None
+    row_count_rows = sheet_row_count_rows(
+        wb1, wb2, sheets=sheets if args.sheet else None
+    )
+
     if args.row_counts:
-        row_count_rows = sheet_row_count_rows(
-            wb1, wb2, sheets=sheets if args.sheet else None
+        print()
+        print("=== Row counts only (--row-counts) ===")
+        print(f"File 1: {os.path.basename(args.file1)}")
+        print(f"File 2: {os.path.basename(args.file2)}")
+        print()
+        _print_section(
+            "Per-sheet row counts (openpyxl Worksheet.max_row; Δ = File2 − File1 when both have the sheet) —",
+            row_count_rows,
+            "No worksheets.",
         )
+        if args.output:
+            _write_report_row_counts_only(args.output, row_count_rows)
+            print(f"Report written to: {args.output}")
+        sys.exit(0)
 
     dfs1: dict = {}
     dfs2: dict = {}
@@ -304,16 +336,15 @@ def main():
             "Quick numeric column totals: enabled (--numeric-column-totals); "
             "pandas sums only (no Excel format checks on columns)."
         )
-    if args.row_counts:
-        print("Per-sheet row counts: enabled (--row-counts; openpyxl max_row).")
+    if args.output:
+        print("Rowcounts sheet / HTML section will be included in the report (openpyxl max_row).")
     print()
 
-    if args.row_counts:
-        _print_section(
-            "Per-sheet row counts (openpyxl Worksheet.max_row; Δ = File2 − File1 when both have the sheet) —",
-            row_count_rows,
-            "No worksheets.",
-        )
+    _print_section(
+        "Per-sheet row counts (openpyxl Worksheet.max_row; Δ = File2 − File1 when both have the sheet) —",
+        row_count_rows,
+        "No worksheets.",
+    )
 
     _print_section(
         "Sheet empty vs data mismatch — (same sheet name, one workbook has no cell data)",
@@ -378,7 +409,7 @@ def main():
             column_formatting=all_column_fmt if not args.alignment_only else None,
             sheet_presence=all_sheet_presence,
             data_align_with_format=all_align_and_format if args.alignment_only else None,
-            row_counts=row_count_rows if args.row_counts else None,
+            row_counts=row_count_rows,
         )
         print(f"Report written to: {args.output}")
 
